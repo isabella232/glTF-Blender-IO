@@ -49,10 +49,11 @@ class MeshImporter():
     def rig(pymesh, skin_id, mesh_id):
         if skin_id not in pymesh.gltf.skins.keys():
             pymesh.skin = SkinImporter.importer(skin_id, pymesh.gltf.json['skins'][skin_id], pymesh.gltf)
-            pymesh.skin.mesh_id = mesh_id
+            pymesh.skin.mesh_id.add(mesh_id)
             pymesh.gltf.skins[skin_id] = pymesh.skin
         else:
             pymesh.skin = pymesh.gltf.skins[skin_id]
+            pymesh.skin.mesh_id.add(mesh_id)
 
     @staticmethod
     def importer(idx, json, gltf):

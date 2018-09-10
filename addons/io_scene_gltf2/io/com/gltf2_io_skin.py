@@ -44,5 +44,5 @@ class PySkin():
         # glTF2.0 specifics
 
         self.bones = [] #TODO is joints
-        self.mesh_id = None
+        self.mesh_id = set()
         self.root = None #TODO is skeleton
