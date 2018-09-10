@@ -42,7 +42,7 @@ class BlenderScene():
     # Create a new scene only if not already exists in .blend file
     # TODO : put in current scene instead ?
         if pyscene.name not in [scene.name for scene in bpy.data.scenes]:
-            if pyscene.name:
+            if False:
                 scene = bpy.data.scenes.new(pyscene.name)
             else:
                 scene = bpy.context.scene
