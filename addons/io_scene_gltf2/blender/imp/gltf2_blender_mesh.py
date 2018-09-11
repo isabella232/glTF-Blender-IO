@@ -25,6 +25,7 @@ import bmesh
 
 from .gltf2_blender_primitive import *
 from ..com.gltf2_blender_conversion import *
+from .gltf2_blender_skin import *
 
 class BlenderMesh():
 
@@ -32,9 +33,9 @@ class BlenderMesh():
     def create(pymesh, parent):
         # Check if the mesh is rigged, and create armature if needed
         if pymesh.skin:
-            if pymesh.skin.blender_armature_name is None:
+            if not hasattr(pymesh.skin, "blender_armature_name") or pymesh.skin.blender_armature_name is None:
                 # Create empty armature for now
-                pymesh.skin.create_blender_armature(parent)
+                BlenderSkin.create_armature(pymesh.skin, parent)
 
         # Geometry
         if pymesh.name:

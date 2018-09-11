@@ -27,7 +27,7 @@ class SamplerImporter():
 
     @staticmethod
     def read(pysampler):
-        pysampler.interpolation = pysampler.json['interpolation']
+        pysampler.interpolation = pysampler.json['interpolation'] if 'interpolation' in pysampler.json else 'LINEAR'
         if pysampler.json['input'] not in pysampler.gltf.accessors.keys():
             pysampler.gltf.accessors[pysampler.json['input']], input_data = AccessorImporter.importer(pysampler.json['input'], pysampler.gltf.json['accessors'][pysampler.json['input']], pysampler.gltf)
             pysampler.input = pysampler.gltf.accessors[pysampler.json['input']]
