@@ -64,8 +64,18 @@ class BlenderSkin():
                 mat = Matrix.Translation(parent_mat.to_translation() + ( parent_mat.to_quaternion() * transform.to_translation() )) * mat
                 #TODO scaling of bones ?
 
-        bone.matrix = mat
-        return bone.matrix
+        # Use inverse bind matrix to set bone's edit transform
+
+        invbm = mat
+        index_in_skel = pyskin.bones.index(node.index)
+        if index_in_skel < len(pyskin.data):
+            invbm = Conversion.matrix_gltf_to_blender(pyskin.data[index_in_skel])
+            invbm.invert()
+        else:
+            pyskin.gltf.log.error("Error with inverseBindMatrix for skin " + pyskin)
+
+        bone.matrix = invbm
+        return invbm, mat
 
     @staticmethod
     def create_bone(pyskin, node, parent):
@@ -85,18 +95,19 @@ class BlenderSkin():
         node.blender_bone_name = bone.name
         node.blender_armature_name = pyskin.blender_armature_name
         bone.tail = Vector((0.0,1.0,0.0)) # Needed to keep bone alive
-        mat = BlenderSkin.set_bone_transforms(pyskin, bone, node, parent)
-        node.blender_bone_matrix = mat
+        bind_pose, pose = BlenderSkin.set_bone_transforms(pyskin, bone, node, parent)
+        node.blender_bone_matrix = bind_pose
+
 
         # Set parent
         if parent is not None and hasattr(pyskin.gltf.scene.nodes[parent], "blender_bone_name"):
             bone.parent = obj.data.edit_bones[pyskin.gltf.scene.nodes[parent].blender_bone_name] #TODO if in another scene
 
         bpy.ops.object.mode_set(mode="OBJECT")
+        obj.pose.bones[node.blender_bone_name].matrix = pose
 
     @staticmethod
     def create_vertex_groups(pyskin):
-        print(pyskin.mesh_id)
         for mesh in pyskin.mesh_id:
             obj = bpy.data.objects[pyskin.gltf.scene.nodes[mesh].blender_object]
             for bone in pyskin.bones:

@@ -150,6 +150,7 @@ class glTFImporter():
             if is_joint:
                 node.is_joint = True
                 node.skin_id     = skin
+                node.invbind = pygltf.skins[skin].data
 
         for scene in pygltf.other_scenes:
             for node in scene.nodes.values():
