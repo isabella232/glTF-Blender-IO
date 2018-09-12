@@ -55,13 +55,14 @@ class PbrImporter():
 
         if 'metallicFactor' in pypbr.json.keys():
             pypbr.metallicFactor = pypbr.json['metallicFactor']
-            if pypbr.metallic_type == pypbr.TEXTURE and pypbr.metallicFactor != 1.0 and pypbr.roughnessFactor != 1.0:
-                pypbr.metallic_type = pypbr.TEXTURE_FACTOR
 
         if 'roughnessFactor' in pypbr.json.keys():
             pypbr.roughnessFactor = pypbr.json['roughnessFactor']
-            if pypbr.metallic_type == pypbr.TEXTURE and pypbr.roughnessFactor != 1.0 and pypbr.metallicFactor != 1.0:
-                pypbr.metallic_type = pypbr.TEXTURE_FACTOR
+
+        if pypbr.metallic_type == pypbr.TEXTURE and (pypbr.roughnessFactor != 1.0 or pypbr.metallicFactor != 1.0):
+            pypbr.metallic_type = pypbr.TEXTURE_FACTOR
+
+
 
     @staticmethod
     def importer(json, gltf):
