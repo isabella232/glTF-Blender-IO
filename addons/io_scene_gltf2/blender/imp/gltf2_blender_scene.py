@@ -55,6 +55,10 @@ class BlenderScene():
         for node in pyscene.root_nodes_idx:
             BlenderNode.create(pyscene.nodes[node], None) # None => No parent
 
+        # If node <-> armature is not identity, inversebindmatrices need to be updated in consequence
+        for armature in pyscene.gltf.skins.values():
+            BlenderSkin.update_bind_pose(armature)
+
         # Now that all mesh / bones are created, create vertex groups on mesh
         for armature in pyscene.gltf.skins.values():
             BlenderSkin.create_vertex_groups(armature)

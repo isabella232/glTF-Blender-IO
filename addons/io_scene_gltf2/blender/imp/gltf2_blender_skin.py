@@ -167,3 +167,16 @@ class BlenderSkin():
             #obj.parent = bpy.data.objects[pyskin.blender_armature_name]
             arma = obj.modifiers.new(name="Armature", type="ARMATURE")
             arma.object = bpy.data.objects[pyskin.blender_armature_name]
+
+    @staticmethod
+    def update_bind_pose(pyskin):
+        if not len(pyskin.mesh_id):
+            return
+
+        # use first mesh id as default to fix invbindmatrix
+        node = bpy.data.objects[list(pyskin.mesh_id)[0]]
+        arm  = bpy.data.objects[pyskin.blender_armature_name]
+
+        correction = arm.matrix_world.inverted() * node.matrix_world
+        print(correction)
+
