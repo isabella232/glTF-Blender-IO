@@ -70,7 +70,7 @@ class BlenderBoneAnim():
 
 
                     # Setting interpolation
-                    for fcurve in [curve for curve in obj.animation_data.action.fcurves if curve.group.name == "rotation"]:
+                    for fcurve in [curve for curve in obj.animation_data.action.fcurves if curve.group.name == "location"]:
                         for kf in fcurve.keyframe_points:
                             BlenderAnimationData.set_interpolation(channel.interpolation, kf)
 
@@ -127,6 +127,6 @@ class BlenderBoneAnim():
                         bone.keyframe_insert(blender_path, frame = key[0] * fps, group='scale')
 
                     # Setting interpolation
-                    for fcurve in [curve for curve in obj.animation_data.action.fcurves if curve.group.name == "rotation"]:
+                    for fcurve in [curve for curve in obj.animation_data.action.fcurves if curve.group.name == "scale"]:
                         for kf in fcurve.keyframe_points:
                             BlenderAnimationData.set_interpolation(channel.interpolation, kf)
