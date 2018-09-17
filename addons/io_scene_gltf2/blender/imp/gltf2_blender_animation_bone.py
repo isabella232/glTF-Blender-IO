@@ -54,6 +54,7 @@ class BlenderBoneAnim():
                     for key in channel.data:
                         transform = Matrix.Translation(Conversion.loc_gltf_to_blender(list(key[1])))
                         if not pyanim.animation.node.parent:
+                            parent_mat = Matrix()
                             mat = transform
                         else:
                             if not pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].is_joint: # TODO if Node in another scene

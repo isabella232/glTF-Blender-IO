@@ -61,16 +61,13 @@ class BlenderSkin():
             else:
                 transform = Conversion.matrix_gltf_to_blender(node.transform)
                 parent_mat = obj.data.edit_bones[pyskin.gltf.scene.nodes[parent].blender_bone_name].matrix  # Node in another scene
-                parent_idx = pyskin.bones.index(pyskin.gltf.scene.nodes[parent].index)
-                parent_invbind = Conversion.matrix_gltf_to_blender(pyskin.data[parent_idx]).inverted()
 
-                mat = Utils.compute_armspace_transform(transform, parent_mat)
+                # mat = Utils.compute_armspace_transform(transform, parent_mat)
                 mat = (parent_mat.to_quaternion() * transform.to_quaternion()).to_matrix().to_4x4()
                 mat = Matrix.Translation(parent_mat.to_translation() + ( parent_mat.to_quaternion() * transform.to_translation() )) * mat
                 #TODO scaling of bones ?
 
         # Use inverse bind matrix to set bone's edit transform
-
         invbm = mat
         index_in_skel = pyskin.bones.index(node.index)
         if index_in_skel < len(pyskin.data):
@@ -89,6 +86,7 @@ class BlenderSkin():
 
         bpy.context.screen.scene = scene
         scene.objects.active = obj
+        obj.data.pose_position = 'REST'
         bpy.ops.object.mode_set(mode="EDIT")
 
         if node.name:
@@ -101,19 +99,44 @@ class BlenderSkin():
         node.blender_armature_name = pyskin.blender_armature_name
         bone.tail = Vector((0.0,1.0,0.0)) # Needed to keep bone alive
         bind_pose, pose = BlenderSkin.set_bone_transforms(pyskin, bone, node, parent)
+
         node.blender_bone_matrix = bind_pose
 
         # set parent
         if parent is not None and hasattr(pyskin.gltf.scene.nodes[parent], "blender_bone_name"):
             bone.parent = obj.data.edit_bones[pyskin.gltf.scene.nodes[parent].blender_bone_name] #TODO if in another scene
-            if bone.head.magnitude > 0.001:
-                bone.parent.tail = bone.head
-
             # bone.head = bone.parent.tail
 
         bpy.ops.object.mode_set(mode="OBJECT")
-        obj.pose.bones[node.blender_bone_name].matrix = pose
-        obj.pose.bones[node.blender_bone_name].matrix = obj.pose.bones[node.blender_bone_name].matrix
+        obj.data.pose_position = 'POSE'
+        bpy.context.scene.update()
+
+        # obj.pose.bones[node.blender_bone_name].matrix = pose
+        # obj.pose.bones[node.blender_bone_name].matrix = obj.pose.bones[node.blender_bone_name].matrix
+
+        # Do the same thing as in animation
+        transform = Conversion.matrix_gltf_to_blender(node.transform)
+        if parent is not None and hasattr(pyskin.gltf.scene.nodes[parent], "blender_bone_matrix"):
+            parent_mat = pyskin.gltf.scene.nodes[parent].blender_bone_matrix
+            loc, rot, scale  = Conversion.matrix_gltf_to_blender(node.transform).decompose()
+            transform_loc = Matrix.Translation(loc)
+            final_trans = Utils.get_armspace_trans(transform_loc, parent_mat)
+            trans_mat = Matrix.Translation(node.blender_bone_matrix.to_translation()).inverted()
+            obj.pose.bones[node.blender_bone_name].location = trans_mat * final_trans  
+
+            transform_rot = rot.to_matrix().to_4x4()
+            final_rot = Utils.get_armspace_quat(transform_rot, parent_mat)
+            obj.pose.bones[node.blender_bone_name].rotation_quaternion = node.blender_bone_matrix.to_quaternion().inverted() * final_rot
+
+        else:
+            loc, rot, scale  = Conversion.matrix_gltf_to_blender(node.transform).decompose()
+            obj.pose.bones[node.blender_bone_name].location = loc
+            obj.pose.bones[node.blender_bone_name].rotation_quaternion = rot
+
+
+
+        # print(transform.to_quaternion())
+        # print(transform.to_scale())
 
     @staticmethod
     def create_vertex_groups(pyskin):
@@ -177,15 +200,4 @@ class BlenderSkin():
             arma = obj.modifiers.new(name="Armature", type="ARMATURE")
             arma.object = bpy.data.objects[pyskin.blender_armature_name]
 
-    @staticmethod
-    def update_bind_pose(pyskin):
-        if not len(pyskin.mesh_id):
-            return
-
-        # use first mesh id as default to fix invbindmatrix
-        node = bpy.data.objects[list(pyskin.mesh_id)[0]]
-        arm  = bpy.data.objects[pyskin.blender_armature_name]
-
-        correction = arm.matrix_world.inverted() * node.matrix_world
-        print(correction)
 
