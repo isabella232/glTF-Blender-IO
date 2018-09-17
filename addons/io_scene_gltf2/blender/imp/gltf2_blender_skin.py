@@ -40,6 +40,7 @@ class BlenderSkin():
 
         armature = bpy.data.armatures.new(name)
         obj = bpy.data.objects.new(name, armature)
+        obj.show_x_ray = True
         bpy.data.scenes[pyskin.gltf.blender_scene].objects.link(obj)
         pyskin.blender_armature_name = obj.name
         if parent:
@@ -102,12 +103,15 @@ class BlenderSkin():
         bind_pose, pose = BlenderSkin.set_bone_transforms(pyskin, bone, node, parent)
         node.blender_bone_matrix = bind_pose
 
-
-        # Set parent
+        # set parent
         if parent is not None and hasattr(pyskin.gltf.scene.nodes[parent], "blender_bone_name"):
             bone.parent = obj.data.edit_bones[pyskin.gltf.scene.nodes[parent].blender_bone_name] #TODO if in another scene
+            if bone.head.magnitude > 0.001:
+                bone.parent.tail = bone.head
 
-        bpy.ops.object.mode_set(mode="POSE")
+            # bone.head = bone.parent.tail
+
+        bpy.ops.object.mode_set(mode="OBJECT")
         obj.pose.bones[node.blender_bone_name].matrix = pose
         obj.pose.bones[node.blender_bone_name].matrix = obj.pose.bones[node.blender_bone_name].matrix
 
