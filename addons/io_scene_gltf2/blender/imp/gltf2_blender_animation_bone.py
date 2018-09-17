@@ -25,6 +25,7 @@ from mathutils import Quaternion, Matrix
 
 from .gltf2_blender_animation_data import *
 from ..com.gltf2_blender_conversion import *
+from ..com.gltf2_blender_utils import *
 
 class BlenderBoneAnim():
 
@@ -60,12 +61,15 @@ class BlenderBoneAnim():
                                 mat = transform
                             else:
                                 parent_mat = pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_bone_matrix
-
+                                scale = Utils.scale_to_matrix(parent_mat.to_scale())
                                 mat = (parent_mat.to_quaternion() * transform.to_quaternion()).to_matrix().to_4x4()
-                                mat = Matrix.Translation(parent_mat.to_translation() + ( parent_mat.to_quaternion() * transform.to_translation() )) * mat
+                                mat = scale * Matrix.Translation(parent_mat.to_translation() + ( parent_mat.to_quaternion() * transform.to_translation() )) * mat
+                                # mat = Matrix.Translation(Utils.get_armspace_trans(transform, parent_mat))
                                 #TODO scaling of bones ?
 
-                        bone.location = pyanim.animation.node.blender_bone_matrix.inverted() * mat.to_translation()
+                        final_trans = Utils.get_armspace_trans(transform, parent_mat)
+                        trans_mat = Matrix.Translation(pyanim.animation.node.blender_bone_matrix.to_translation()).inverted()
+                        bone.location = trans_mat * final_trans  
                         bone.keyframe_insert(blender_path, frame = key[0] * fps, group='location')
 
 
@@ -80,18 +84,21 @@ class BlenderBoneAnim():
                         transform = (Conversion.quaternion_gltf_to_blender(key[1])).to_matrix().to_4x4()
                         if not pyanim.animation.node.parent:
                             mat = transform
+                            bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * mat.to_quaternion()
                         else:
                             if not pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].is_joint: # TODO if Node in another scene
                                 parent_mat = bpy.data.objects[pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_object].matrix_world
                                 mat = transform
+                                bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * mat.to_quaternion()
                             else:
                                 parent_mat = pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_bone_matrix
 
                                 mat = (parent_mat.to_quaternion() * transform.to_quaternion()).to_matrix().to_4x4()
                                 mat = Matrix.Translation(parent_mat.to_translation() + ( parent_mat.to_quaternion() * transform.to_translation() )) * mat
                                 #TODO scaling of bones ?
+                                final_rot = Utils.get_armspace_quat(transform, parent_mat)
+                                bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * final_rot
 
-                        bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * mat.to_quaternion()
                         bone.keyframe_insert(blender_path, frame = key[0] * fps, group='rotation')
 
                     # Setting interpolation
@@ -122,8 +129,10 @@ class BlenderBoneAnim():
                                 mat = parent_mat.inverted() * transform
 
 
+
                         #bone.scale # TODO
-                        bone.scale = mat.to_scale()
+                        final_scale = Utils.get_armspace_scale(transform, parent_mat)
+                        bone.scale = final_scale
                         bone.keyframe_insert(blender_path, frame = key[0] * fps, group='scale')
 
                     # Setting interpolation

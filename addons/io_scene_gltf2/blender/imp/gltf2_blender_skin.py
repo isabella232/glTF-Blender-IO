@@ -24,6 +24,7 @@
 import bpy
 from mathutils import Vector, Matrix, Quaternion
 from ..com.gltf2_blender_conversion import *
+from ..com.gltf2_blender_utils import *
 
 class BlenderSkin():
 
@@ -58,8 +59,11 @@ class BlenderSkin():
                 mat = transform
             else:
                 transform = Conversion.matrix_gltf_to_blender(node.transform)
-                parent_mat = obj.data.edit_bones[pyskin.gltf.scene.nodes[parent].blender_bone_name].matrix # Node in another scene
+                parent_mat = obj.data.edit_bones[pyskin.gltf.scene.nodes[parent].blender_bone_name].matrix  # Node in another scene
+                parent_idx = pyskin.bones.index(pyskin.gltf.scene.nodes[parent].index)
+                parent_invbind = Conversion.matrix_gltf_to_blender(pyskin.data[parent_idx]).inverted()
 
+                mat = Utils.compute_armspace_transform(transform, parent_mat)
                 mat = (parent_mat.to_quaternion() * transform.to_quaternion()).to_matrix().to_4x4()
                 mat = Matrix.Translation(parent_mat.to_translation() + ( parent_mat.to_quaternion() * transform.to_translation() )) * mat
                 #TODO scaling of bones ?
@@ -103,8 +107,9 @@ class BlenderSkin():
         if parent is not None and hasattr(pyskin.gltf.scene.nodes[parent], "blender_bone_name"):
             bone.parent = obj.data.edit_bones[pyskin.gltf.scene.nodes[parent].blender_bone_name] #TODO if in another scene
 
-        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.mode_set(mode="POSE")
         obj.pose.bones[node.blender_bone_name].matrix = pose
+        obj.pose.bones[node.blender_bone_name].matrix = obj.pose.bones[node.blender_bone_name].matrix
 
     @staticmethod
     def create_vertex_groups(pyskin):
