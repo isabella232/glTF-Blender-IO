@@ -55,24 +55,20 @@ class BlenderBoneAnim():
                         transform = Matrix.Translation(Conversion.loc_gltf_to_blender(list(key[1])))
                         if not pyanim.animation.node.parent:
                             parent_mat = Matrix()
-                            mat = transform
                         else:
                             if not pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].is_joint: # TODO if Node in another scene
                                 parent_mat = bpy.data.objects[pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_object].matrix_world
-                                mat = transform
                             else:
                                 parent_mat = pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_bone_matrix
-                                scale = Utils.scale_to_matrix(parent_mat.to_scale())
-                                mat = (parent_mat.to_quaternion() * transform.to_quaternion()).to_matrix().to_4x4()
-                                mat = scale * Matrix.Translation(parent_mat.to_translation() + ( parent_mat.to_quaternion() * transform.to_translation() )) * mat
-                                # mat = Matrix.Translation(Utils.get_armspace_trans(transform, parent_mat))
-                                #TODO scaling of bones ?
 
+                        # Get bone translation in armature space
                         final_trans = Utils.get_armspace_trans(transform, parent_mat)
-                        trans_mat = Matrix.Translation(pyanim.animation.node.blender_bone_matrix.to_translation()).inverted()
-                        bone.location = trans_mat * final_trans  
-                        bone.keyframe_insert(blender_path, frame = key[0] * fps, group='location')
 
+                        # Get bind translation in armature space and invert it to compute bind -> pose location
+                        trans_mat = Matrix.Translation(pyanim.animation.node.blender_bone_matrix.to_translation()).inverted()
+                        final_location = trans_mat * final_trans
+                        bone.location = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted().to_matrix().to_4x4() * final_location
+                        bone.keyframe_insert(blender_path, frame = key[0] * fps, group='location')
 
                     # Setting interpolation
                     for fcurve in [curve for curve in obj.animation_data.action.fcurves if curve.group.name == "location"]:
@@ -93,12 +89,8 @@ class BlenderBoneAnim():
                                 bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * mat.to_quaternion()
                             else:
                                 parent_mat = pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_bone_matrix
-
-                                mat = (parent_mat.to_quaternion() * transform.to_quaternion()).to_matrix().to_4x4()
-                                mat = Matrix.Translation(parent_mat.to_translation() + ( parent_mat.to_quaternion() * transform.to_translation() )) * mat
-                                #TODO scaling of bones ?
                                 final_rot = Utils.get_armspace_quat(transform, parent_mat)
-                                bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * final_rot
+                                bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().rotation_difference(final_rot)
 
                         bone.keyframe_insert(blender_path, frame = key[0] * fps, group='rotation')
 
@@ -120,20 +112,15 @@ class BlenderBoneAnim():
                         ])
 
                         if not pyanim.animation.node.parent:
-                            mat = transform
+                            parent_mat = Matrix()
                         else:
                             if not pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].is_joint: # TODO if Node in another scene
                                 parent_mat = bpy.data.objects[pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_object].matrix_world
-                                mat = transform
                             else:
                                 parent_mat = pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_bone_matrix
-                                mat = parent_mat.inverted() * transform
 
-
-
-                        #bone.scale # TODO
-                        final_scale = Utils.get_armspace_scale(transform, parent_mat)
-                        bone.scale = final_scale
+                        final_scale = Utils.scale_to_matrix(pyanim.animation.node.blender_bone_matrix.to_scale()).inverted() * Utils.scale_to_matrix(parent_mat.to_scale()) * transform
+                        bone.scale = final_scale.to_scale()
                         bone.keyframe_insert(blender_path, frame = key[0] * fps, group='scale')
 
                     # Setting interpolation
