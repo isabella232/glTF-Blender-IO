@@ -86,8 +86,8 @@ class BlenderSkin():
 
             # Remove original bind location from armspace location
             inv_arm_space_bind_location = Matrix.Translation(node.blender_bone_matrix.to_translation()).inverted()
-            obj.pose.bones[node.blender_bone_name].location = inv_arm_space_bind_location * arm_space_location
-
+            final_location = inv_arm_space_bind_location * arm_space_location
+            obj.pose.bones[node.blender_bone_name].location = node.blender_bone_matrix.to_quaternion().inverted().to_matrix().to_4x4() * final_location
             # Do the same for rotation
             transform_rotation = rotation.to_matrix().to_4x4()
             arm_space_rotation = Utils.get_armspace_quat(transform_rotation, parent_mat)
