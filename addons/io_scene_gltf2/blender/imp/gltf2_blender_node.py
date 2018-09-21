@@ -138,6 +138,7 @@ class BlenderNode():
                     bpy.data.objects[node.blender_armature_name].select = True
                     bpy.context.scene.objects.active = bpy.data.objects[node.blender_armature_name]
                     bpy.ops.object.parent_set(type='BONE', keep_transform=True)
+                    obj.matrix_local = bpy.data.objects[node.blender_armature_name].pose.bones[node.blender_bone_name].matrix * obj.matrix_local
 
                     return
                 if node.blender_object:
