@@ -78,19 +78,25 @@ class BlenderBoneAnim():
                 elif channel.path == "rotation":
                     blender_path = "rotation_quaternion"
                     for key in channel.data:
-                        transform = (Conversion.quaternion_gltf_to_blender(key[1])).to_matrix().to_4x4()
+                        quat_keyframe = Conversion.quaternion_gltf_to_blender(key[1])
                         if not pyanim.animation.node.parent:
-                            mat = transform
-                            bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * mat.to_quaternion()
+                            bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * quat_keyframe
                         else:
                             if not pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].is_joint: # TODO if Node in another scene
                                 parent_mat = bpy.data.objects[pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_object].matrix_world
-                                mat = transform
-                                bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * mat.to_quaternion()
+                                bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().inverted() * quat_keyframe
                             else:
+                                # Note: some operations lead to issue with quaternions. Converting to matrix and then back to quaternions breaks quaternion continuity
+                                # (see antipodal quaternions). Blender interpolates between two antipodal quaternions, which causes glitches in animation.
+                                # Converting to euler and then back to quaternion is a dirty fix preventing this issue in animation, until a better solution is found
+                                # This fix is skipped when parent matrix is identity
                                 parent_mat = pyanim.animation.gltf.scene.nodes[pyanim.animation.node.parent].blender_bone_matrix
-                                final_rot = Utils.get_armspace_quat(transform, parent_mat)
-                                bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().rotation_difference(final_rot)
+
+                                if parent_mat != parent_mat.inverted():
+                                    final_rot = Utils.get_armspace_quat(quat_keyframe.to_matrix().to_4x4(), parent_mat)
+                                    bone.rotation_quaternion = pyanim.animation.node.blender_bone_matrix.to_quaternion().rotation_difference(final_rot).to_euler().to_quaternion()
+                                else:
+                                    bone.rotation_quaternion = Conversion.quaternion_gltf_to_blender(key[1])
 
                         bone.keyframe_insert(blender_path, frame = key[0] * fps, group='rotation')
 
