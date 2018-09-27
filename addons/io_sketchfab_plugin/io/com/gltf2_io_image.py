@@ -1,4 +1,4 @@
-# Copyright (c) 2017 The Khronos Group Inc.
+# Copyright 2018 The glTF-Blender-IO authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ class Image():
         self.channels = 4
         self.pixels = pixels
         self.name = ""
+        self.file_format = "PNG"
 
     def to_png_data(self):
         buf = bytearray([int(channel * 255.0) for channel in self.pixels])
@@ -54,6 +55,11 @@ class Image():
             png_pack(b'IHDR', struct.pack("!2I5B", self.width, self.height, 8, 6, 0, 0, 0)),
             png_pack(b'IDAT', zlib.compress(raw_data, 9)),
             png_pack(b'IEND', b'')])
+
+    def to_image_data(self, mime_type):
+        if mime_type == 'image/png':
+            return self.to_png_data()
+        raise ValueError("Unsupported image file type {}".format(mime_type))
 
     def save_png(self, dst_path):
         data = self.to_png_data()

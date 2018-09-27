@@ -1,3 +1,17 @@
+# Copyright 2018 The glTF-Blender-IO authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import shutil
 import bpy
@@ -60,7 +74,7 @@ def create_image_data(context, export_settings, blender_image, file_format):
         return None
 
     if file_format == 'PNG':
-        return _create_png_data(context, export_settings, blender_image)
+        return _create_png_data(blender_image)
     else:
         return _create_jpg_data(context, export_settings, blender_image)
 
@@ -81,7 +95,7 @@ def _create_jpg_data(context, export_settings, blender_image):
     return jpg_data
 
 
-def _create_png_data(context, export_settings, blender_image):
+def _create_png_data(blender_image):
     """
     Creates a PNG byte array from a given Blender image.
     """

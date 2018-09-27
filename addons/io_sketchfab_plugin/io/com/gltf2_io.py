@@ -1,6 +1,25 @@
+# Copyright 2018 The glTF-Blender-IO authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 ## NOTE: Generated from latest glTF 2.0 JSON Scheme specs using quicktype (https://github.com/quicktype/quicktype)
 ## command used:
 ##	quicktype --src glTF.schema.json --src-lang schema -t gltf --lang python --python-version 3.5
+
+#TODO: REMOVE
+import sys
+import traceback
+from io_scene_gltf2.io.com import gltf2_io_debug
 
 def from_int(x):
     assert isinstance(x, int) and not isinstance(x, bool)
@@ -13,11 +32,19 @@ def from_none(x):
 
 
 def from_union(fs, x):
+    tracebacks = []
     for f in fs:
         try:
             return f(x)
-        except:
-            pass
+        except Exception as e:
+            _, _, tb = sys.exc_info()
+            tracebacks.append(tb)
+    for tb in tracebacks:
+        traceback.print_tb(tb)  # Fixed format
+        tb_info = traceback.extract_tb(tb)
+        for tbi in tb_info:
+            filename, line, func, text = tbi
+            gltf2_io_debug.print_console('ERROR', 'An error occurred on line {} in statement {}'.format(line, text))
     assert False
 
 
@@ -42,8 +69,7 @@ def from_float(x):
 
 
 def from_str(x):
-    res = isinstance(x, str) or isinstance(x, unicode)
-    assert res
+    assert isinstance(x, str)
     return x
 
 
@@ -1048,7 +1074,6 @@ class Skin:
 
 class Texture:
     """A texture and its sampler."""
-
     def __init__(self, extensions, extras, name, sampler, source):
         self.extensions = extensions
         self.extras = extras
@@ -1059,22 +1084,20 @@ class Texture:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        extensions = from_union([lambda x: from_dict(lambda x: from_dict(lambda x: x, x), x), from_none],
-                                obj.get("extensions"))
+        extensions = from_union([lambda x: from_dict(lambda x: from_dict(lambda x: x, x), x), from_none], obj.get("extensions"))
         extras = obj.get("extras")
         name = from_union([from_str, from_none], obj.get("name"))
         sampler = from_union([from_int, from_none], obj.get("sampler"))
-        source = from_union([from_int, from_none], obj.get("source"))
+        source = from_int(obj.get("source"))
         return Texture(extensions, extras, name, sampler, source)
 
     def to_dict(self):
         result = {}
-        result["extensions"] = from_union([lambda x: from_dict(lambda x: from_dict(lambda x: x, x), x), from_none],
-                                          self.extensions)
+        result["extensions"] = from_union([lambda x: from_dict(lambda x: from_dict(lambda x: x, x), x), from_none], self.extensions)
         result["extras"] = self.extras
         result["name"] = from_union([from_str, from_none], self.name)
         result["sampler"] = from_union([from_int, from_none], self.sampler)
-        result["source"] = from_union([from_int, from_none], self.source)
+        result["source"] = from_int(self.source)
         return result
 
 

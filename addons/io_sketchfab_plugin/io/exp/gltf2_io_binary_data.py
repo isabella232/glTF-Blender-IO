@@ -1,3 +1,6 @@
+# Copyright 2018 The glTF-Blender-IO authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -10,17 +13,28 @@
 # limitations under the License.
 
 # from io_scene_gltf2.io.com import gltf2_io
-# from io_scene_gltf2.io.com import gltf2_io_constants
+from io_scene_gltf2.io.com import gltf2_io_constants
 #
+
+import array
+from io_scene_gltf2.io.com import gltf2_io_constants
 
 class BinaryData:
     """
 
     """
-    def __init__(self, data, component_type, element_type, normalized=False, group_label=None):
-
+    def __init__(self, data: bytes):
+        if not isinstance(data, bytes):
+            raise TypeError("Data is not a bytes array")
         self.data = data
-        self.component_type = component_type
-        self.element_type = element_type
-        self.normalized = normalized
-        self.group_label = group_label
+
+    @classmethod
+    def from_list(cls, lst: list, gltf_component_type: gltf2_io_constants.ComponentType):
+        # if gltf_component_type not in gltf2_io_constants.ComponentType:
+        #     raise ValueError("Invalid list data type")
+        format_char = gltf2_io_constants.ComponentType.to_type_code(gltf_component_type)
+        return BinaryData(array.array(format_char, lst).tobytes())
+
+    @property
+    def byte_length(self):
+        return len(self.data)

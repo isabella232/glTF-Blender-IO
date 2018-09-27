@@ -1,4 +1,4 @@
-# Copyright (c) 2018 The Khronos Group Inc.
+# Copyright 2018 The glTF-Blender-IO authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 import mathutils
 
-from io_scene_gltf2.blender.exp.gltf2_blender_gather import cached
+from io_scene_gltf2.blender.exp.gltf2_blender_gather_cache import cached
 from io_scene_gltf2.io.com import gltf2_io
 
 

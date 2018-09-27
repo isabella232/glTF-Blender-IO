@@ -1,4 +1,4 @@
-# Copyright (c) 2017 The Khronos Group Inc.
+# Copyright 2018 The glTF-Blender-IO authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 #
 
 import copy
-import math
-
 import bpy
+
+import base64
 
 from .gltf2_blender_animate import *
 from .gltf2_blender_extract import *
@@ -28,59 +28,12 @@ from .gltf2_blender_generate_materials import *
 
 from ..com.gltf2_blender_image_util import *
 
-from io_scene_gltf2.blender.com import gltf2_blender_json
 from io_scene_gltf2.io.com import gltf2_io
+from .gltf2_blender_generate_extras import generate_extras
 
 #
 # Functions
 #
-
-def generate_extras(blender_element):
-    """
-    Filters and creates a custom property, which is stored in the glTF extra field.
-    """
-    if not blender_element:
-        return None
-
-    extras = {}
-
-    # Custom properties, which are in most cases present and should not be exported.
-    black_list = ['cycles', 'cycles_visibility', 'cycles_curves', '_RNA_UI']
-
-    count = 0
-    for custom_property in blender_element.keys():
-        if custom_property in black_list:
-            continue
-
-        value = blender_element[custom_property]
-
-        add_value = False
-
-        if isinstance(value, bpy.types.ID):
-            add_value = True
-
-        if isinstance(value, str):
-            add_value = True
-
-        if isinstance(value, (int, float)):
-            add_value = True
-
-        if hasattr(value, "to_list"):
-            value = value.to_list()
-            add_value = True
-
-        if hasattr(value, "to_dict"):
-            value = value.to_dict()
-            add_value = gltf2_blender_json.is_json_convertible(value)
-
-        if add_value:
-            extras[custom_property] = value
-            count += 1
-
-    if count == 0:
-        return None
-
-    return extras
 
 
 def generate_animations_parameter(
@@ -1132,11 +1085,11 @@ def generate_meshes(operator,
         primitives = []
 
         mesh = gltf2_io.Mesh(
-            extensions={},
+            extensions=None,
             extras=None,
             name=name,
             primitives=primitives,
-            weights=[]
+            weights=None
         )
 
         #
@@ -1147,12 +1100,12 @@ def generate_meshes(operator,
 
             primitive = gltf2_io.MeshPrimitive(
                 attributes=attributes,
-                extensions={},
-                extras={},
+                extensions=None,
+                extras=None,
                 indices=None,
                 material=None,
                 mode=None,
-                targets=[]
+                targets=None
             )
 
             #
@@ -1619,10 +1572,10 @@ def generate_node_instance(context,
 
     node = gltf2_io.Node(
         camera=None,
-        children=[],
-        extensions={},
+        children=None,
+        extensions=None,
         extras=None,
-        matrix=[],
+        matrix=None,
         mesh=None,
         name=None,
         rotation=None,
@@ -1678,10 +1631,10 @@ def generate_node_instance(context,
                         # Add correction node for camera, as default direction is different to Blender.
                         correction_node = gltf2_io.Node(
                             camera=None,
-                            children=[],
-                            extensions={},
+                            children=None,
+                            extensions=None,
                             extras=None,
-                            matrix=[],
+                            matrix=None,
                             mesh=None,
                             name=None,
                             rotation=None,
@@ -1712,10 +1665,10 @@ def generate_node_instance(context,
                         # Add correction node for light, as default direction is different to Blender.
                         correction_node = gltf2_io.Node(
                             camera=None,
-                            children=[],
-                            extensions={},
+                            children=None,
+                            extensions=None,
                             extras=None,
-                            matrix=[],
+                            matrix=None,
                             mesh=None,
                             name=None,
                             rotation=None,
@@ -1800,8 +1753,8 @@ def generate_nodes(operator,
 
                 node = gltf2_io.Node(
                     camera=None,
-                    children=[],
-                    extensions={},
+                    children=None,
+                    extensions=None,
                     extras=None,
                     matrix=[],
                     mesh=None,
@@ -1882,10 +1835,10 @@ def generate_nodes(operator,
                     if not joints_written:
                         node = gltf2_io.Node(
                             camera=None,
-                            children=[],
-                            extensions={},
+                            children=None,
+                            extensions=None,
                             extras=None,
-                            matrix=[],
+                            matrix=None,
                             mesh=None,
                             name=None,
                             rotation=None,
@@ -1942,7 +1895,7 @@ def generate_nodes(operator,
                     extensions=None,
                     extras=None,
                     inverse_bind_matrices=None,
-                    joints=[],
+                    joints=None,
                     name=None,
                     skeleton=None
                 )
@@ -2174,13 +2127,6 @@ def generate_images(operator,
 
                 create_image_file(context, blender_image, path, file_format)
 
-                test_dst = create_img(blender_image.size[0], blender_image.size[1])
-                test_src = create_img_from_blender_image(blender_image)
-
-                copy_img_channel(test_dst, 0, test_src, 0)
-                copy_img_channel(test_dst, 2, test_src, 1)
-                test_save_img(test_dst, path + ".test.png")
-
                 # Required
 
                 image['uri'] = uri
@@ -2203,6 +2149,63 @@ def generate_images(operator,
 
         images.append(gltf2_io.Image.from_dict(image))
 
+    filtered_merged_images = export_settings['filtered_merged_images']
+
+    for gltf2_image in filtered_merged_images:
+        #
+        # Property: image
+        #
+
+        image = {'name': get_image_name(gltf2_image.name)}
+
+        # We can only write pngs from blender, so we have to stick to that
+        mime_type = 'image/png'
+
+        #
+
+        if export_settings['gltf_format'] == 'ASCII':
+
+            if export_settings['gltf_embed_images']:
+                # Embed image as Base64.
+
+                image_data = gltf2_image.to_image_data(mime_type)
+
+                # Required
+
+                image['mimeType'] = mime_type
+
+                image['uri'] = 'data:' + mime_type + ';base64,' + base64.b64encode(image_data).decode('ascii')
+
+            else:
+                # Store image external.
+
+                uri = get_image_uri(export_settings, gltf2_image)
+                path = export_settings['gltf_filedirectory'] + uri
+
+                gltf2_image.save_png(path)
+
+                # Required
+
+                image['uri'] = uri
+
+        else:
+            # Store image as glb.
+            # We can only write pngs from blender, so we have to stick to that
+            mime_type = 'image/png'
+            image_data = gltf2_image.to_image_data(mime_type)
+
+            bufferView = generate_bufferView(export_settings, glTF, image_data, 0, 0)
+
+            # Required
+
+            image['mimeType'] = mime_type
+
+            image['bufferView'] = bufferView
+
+        #
+        #
+
+        images.append(gltf2_io.Image.from_dict(image))
     #
     #
 
@@ -2251,7 +2254,7 @@ def generate_textures(operator,
 
             textures.append(gltf2_io.Texture.from_dict(texture))
 
-        else:
+        elif isinstance(blender_texture, bpy.types.TextureSlot):
             magFilter = 9729
             wrap = 10497
             if blender_texture.texture.extension == 'CLIP':
@@ -2260,6 +2263,20 @@ def generate_textures(operator,
             texture['sampler'] = generate_sampler(export_settings, glTF, magFilter, wrap)
 
             texture['source'] = get_image_index(glTF, blender_texture.texture.image.name)
+
+            #
+            #
+
+            textures.append(gltf2_io.Texture.from_dict(texture))
+
+        else:
+            print(blender_texture.name)
+            magFilter = 9729
+            wrap = 10497
+
+            texture['sampler'] = generate_sampler(export_settings, glTF, magFilter, wrap)
+
+            texture['source'] = get_image_index(glTF, blender_texture.name)
 
             #
             #

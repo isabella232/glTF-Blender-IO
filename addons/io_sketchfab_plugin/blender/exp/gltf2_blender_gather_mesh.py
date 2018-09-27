@@ -1,4 +1,4 @@
-# Copyright (c) 2018 The Khronos Group Inc.
+# Copyright 2018 The glTF-Blender-IO authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from io_scene_gltf2.blender.exp.gltf2_blender_gather import cached
+from io_scene_gltf2.blender.exp.gltf2_blender_gather_cache import cached
 from io_scene_gltf2.io.com import gltf2_io
 from io_scene_gltf2.blender.exp import gltf2_blender_gather_primitives
 
@@ -53,7 +53,7 @@ def __gather_name(blender_object, export_settings):
 
 
 def __gather_primitives(blender_object, export_settings):
-    return gltf2_blender_gather_primitives.gather_primitives(blender_object)
+    return gltf2_blender_gather_primitives.gather_primitives(blender_object, export_settings)
 
 
 def __gather_weights(blender_object, export_settings):

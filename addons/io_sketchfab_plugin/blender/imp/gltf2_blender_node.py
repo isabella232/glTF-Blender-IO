@@ -1,24 +1,16 @@
-"""
- * ***** BEGIN GPL LICENSE BLOCK *****
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- *
- * Contributor(s): Julien Duroure.
- *
- * ***** END GPL LICENSE BLOCK *****
- """
+# Copyright 2018 The glTF-Blender-IO authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import bpy
 from .gltf2_blender_mesh import *
@@ -38,10 +30,17 @@ class BlenderNode():
         pynode.parent = parent
 
         if pynode.mesh is not None:
-            if pynode.name:
-                gltf.log.info("Blender create Mesh node " + pynode.name)
+
+            if gltf.data.meshes[pynode.mesh].blender_name is not None:
+                # Mesh is already created, only create instance
+                mesh = bpy.data.meshes[gltf.data.meshes[pynode.mesh].blender_name]
             else:
-                gltf.log.info("Blender create Mesh node")
+                if pynode.name:
+                    gltf.log.info("Blender create Mesh node " + pynode.name)
+                else:
+                    gltf.log.info("Blender create Mesh node")
+
+                mesh = BlenderMesh.create(gltf, pynode.mesh, node_idx, parent)
 
             if pynode.name:
                 name = pynode.name
@@ -51,8 +50,6 @@ class BlenderNode():
                     name = gltf.data.meshes[pynode.mesh].name
                 else:
                     name = "Object_" + str(node_idx)
-
-            mesh = BlenderMesh.create(gltf, pynode.mesh, node_idx, parent)
 
             obj = bpy.data.objects.new(name, mesh)
             obj.rotation_mode = 'QUATERNION'

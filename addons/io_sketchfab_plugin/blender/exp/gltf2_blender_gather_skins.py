@@ -1,3 +1,6 @@
+# Copyright 2018 The glTF-Blender-IO authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -9,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from io_scene_gltf2.blender.exp.gltf2_blender_gather import cached
+from io_scene_gltf2.blender.exp.gltf2_blender_gather_cache import cached
 from io_scene_gltf2.io.com import gltf2_io
 from io_scene_gltf2.io.exp import gltf2_io_binary_data
 from io_scene_gltf2.io.com import gltf2_io_constants
 from io_scene_gltf2.blender.exp import gltf2_blender_gather_joints
-
 import mathutils
 
 
@@ -64,6 +66,13 @@ def __gather_inverse_bind_matrices(blender_object, export_settings):
         axis_basis_change = mathutils.Matrix(
             ((1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, -1.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
 
+    # # artificial torso, as needed by glTF
+    # inverse_bind_matrix = blender_object.matrix_world.inverted() * axis_basis_change.inverted()
+    # for column in range(0, 4):
+    #     for row in range(0, 4):
+    #         inverse_matrices.append(inverse_bind_matrix[row][column])
+
+    #
     for blender_bone in blender_object.pose.bones:
         inverse_bind_matrix = axis_basis_change * blender_bone.bone.matrix_local
         bind_shape_matrix = axis_basis_change * blender_object.matrix_world.inverted() * axis_basis_change.inverted()
@@ -73,35 +82,46 @@ def __gather_inverse_bind_matrices(blender_object, export_settings):
             for row in range(0, 4):
                 inverse_matrices.append(inverse_bind_matrix[row][column])
 
-    return gltf2_io_binary_data.BinaryData(
-        data=inverse_matrices,
-        component_type=gltf2_io_constants.GLTF_COMPONENT_TYPE_FLOAT,
-        element_type=gltf2_io_constants.GLTF_DATA_TYPE_MAT4,
-        group_label='inverse_bind_matrices'
+    binary_data = gltf2_io_binary_data.BinaryData.from_list(inverse_matrices, gltf2_io_constants.ComponentType.Float)
+    return gltf2_io.Accessor(
+        buffer_view=binary_data,
+        byte_offset=None,
+        component_type=gltf2_io_constants.ComponentType.Float,
+        count=len(inverse_matrices) // gltf2_io_constants.DataType.num_elements(gltf2_io_constants.DataType.Mat4),
+        extensions=None,
+        extras=None,
+        max=None,
+        min=None,
+        name=None,
+        normalized=None,
+        sparse=None,
+        type=gltf2_io_constants.DataType.Mat4
     )
 
 
 def __gather_joints(blender_object, export_settings):
-    # the skeletal hierarchy groups below a 'root' joint
-    # TODO: add transform?
-    torso = gltf2_io.Node(
-        camera=None,
-        children=[],
-        extensions={},
-        extras=None,
-        matrix=[],
-        mesh=None,
-        name="Skeleton_" + blender_object.name,
-        rotation=None,
-        scale=None,
-        skin=None,
-        translation=None,
-        weights=None
-    )
+    # # the skeletal hierarchy groups below a 'root' joint
+    # # TODO: add transform?
+    # torso = gltf2_io.Node(
+    #     camera=None,
+    #     children=[],
+    #     extensions={},
+    #     extras=None,
+    #     matrix=[],
+    #     mesh=None,
+    #     name="Skeleton_" + blender_object.name,
+    #     rotation=None,
+    #     scale=None,
+    #     skin=None,
+    #     translation=None,
+    #     weights=None
+    # )
 
+    root_joints = []
     # build the hierarchy of nodes out of the bones
     for blender_bone in blender_object.pose.bones:
-        torso.children.append(gltf2_blender_gather_joints.gather_joint(blender_bone, export_settings))
+        if not blender_bone.parent:
+            root_joints.append(gltf2_blender_gather_joints.gather_joint(blender_bone, export_settings))
 
     # joints is a flat list containing all nodes belonging to the skin
     joints = []
@@ -110,7 +130,8 @@ def __gather_joints(blender_object, export_settings):
         joints.append(node)
         for child in node.children:
             __collect_joints(child)
-    __collect_joints(torso)
+    for joint in root_joints:
+        __collect_joints(joint)
 
     return joints
 

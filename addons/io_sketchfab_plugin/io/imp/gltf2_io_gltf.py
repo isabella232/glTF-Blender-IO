@@ -1,24 +1,16 @@
-"""
- * ***** BEGIN GPL LICENSE BLOCK *****
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- *
- * Contributor(s): Julien Duroure.
- *
- * ***** END GPL LICENSE BLOCK *****
- """
+# Copyright 2018 The glTF-Blender-IO authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from ..com.gltf2_io import *
 from ..com.gltf2_io_debug import *
@@ -26,15 +18,19 @@ import logging
 import json
 import struct
 import base64
-from os.path import dirname, join
+from os.path import dirname, join, getsize, isfile
 
 class glTFImporter():
 
-    def __init__(self, filename, loglevel=logging.ERROR):
+    def __init__(self, filename, import_settings):
         self.filename = filename
+        self.import_settings = import_settings
         self.buffers  = {}
 
-        log = Log(loglevel)
+        if 'loglevel' not in self.import_settings.keys():
+            self.import_settings['loglevel'] = logging.ERROR
+
+        log = Log(import_settings['loglevel'])
         self.log = log.logger
         self.log_handler = log.hdlr
 
@@ -70,6 +66,10 @@ class glTFImporter():
         raise ValueError('Json contains some unauthorized values')
 
     def checks(self):
+
+        if self.data.asset.version != "2.0":
+            return False, "glTF version must be 2"
+
         if self.data.extensions_required is not None:
             for extension in self.data.extensions_required:
                 if extension not in self.data.extensions_used:
@@ -86,15 +86,28 @@ class glTFImporter():
         return True, None
 
     def load_glb(self):
-        header = struct.unpack_from('<I4s', self.content)
+        header = struct.unpack_from('<4sII', self.content)
+        self.format  = header[0]
         self.version = header[1]
+        self.file_size = header[2]
+
+        if self.format != b'glTF':
+            return False, "This file is not a glTF/glb file"
+
+        if self.version != 2:
+            return False, "glTF version doesn't match to 2"
+
+        if self.file_size != getsize(self.filename):
+            return False, "File size doesn't match"
 
         offset = 12 # header size = 12
 
         # TODO check json type for chunk 0, and BIN type for next ones
 
         # json
-        type, str_json, offset = self.load_chunk(offset)
+        type, len_, str_json, offset = self.load_chunk(offset)
+        if len_ != len(str_json):
+            return False, "Length of json part doesn't match"
         try:
             json_ = json.loads(str_json.decode('utf-8'), parse_constant=glTFImporter.bad_json_value)
             self.data = gltf_from_dict(json_)
@@ -104,7 +117,9 @@ class glTFImporter():
         # binary data
         chunk_cpt = 0
         while offset < len(self.content):
-            type, data, offset = self.load_chunk(offset)
+            type, len_, data, offset = self.load_chunk(offset)
+            if len_ != len(data):
+                return False, "Length of bin buffer " + str(chunk_cpt) + " doesn't match"
 
             self.buffers[chunk_cpt] = data
             chunk_cpt += 1
@@ -118,9 +133,14 @@ class glTFImporter():
         data_type    = chunk_header[1]
         data         = self.content[offset + 8 : offset + 8 + data_length]
 
-        return data_type, data, offset + 8 + data_length
+        return data_type, data_length, data, offset + 8 + data_length
 
     def read(self):
+
+        # Check this is a file
+        if not isfile(self.filename):
+            return False, "Please select a file"
+
         # Check if file is gltf or glb
         with open(self.filename, 'rb') as f:
             self.content = f.read()

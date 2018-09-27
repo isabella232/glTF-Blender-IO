@@ -1,4 +1,4 @@
-# Copyright (c) 2018 The Khronos Group Inc.
+# Copyright 2018 The glTF-Blender-IO authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,14 @@
 # limitations under the License.
 
 
-from io_scene_gltf2.blender.exp.gltf2_blender_gather import cached
+from io_scene_gltf2.blender.exp.gltf2_blender_gather_cache import cached
 from io_scene_gltf2.io.com import gltf2_io
-from io_scene_gltf2.blender.exp import gltf2_blender_search_node_tree
+from io_scene_gltf2.blender.exp import gltf2_blender_gather_texture_info
+from io_scene_gltf2.blender.exp import gltf2_blender_gather_material_normal_texture_info_class
+from io_scene_gltf2.blender.exp import gltf2_blender_gather_material_occlusion_texture_info_class
+
+from io_scene_gltf2.blender.exp import gltf2_blender_gather_materials_pbr_metallic_roughness
+from io_scene_gltf2.blender.exp import gltf2_blender_get
 
 @cached
 def gather_material(blender_material, export_settings):
@@ -29,17 +34,17 @@ def gather_material(blender_material, export_settings):
         return None
 
     material = gltf2_io.Material(
-        alpha_cutoff=None,
-        alpha_mode=None,
-        double_sided=None,
-        emissive_factor=None,
-        emissive_texture=None,
-        extensions=None,
-        extras=None,
-        name=None,
-        normal_texture=None,
-        occlusion_texture=None,
-        pbr_metallic_roughness=None
+        alpha_cutoff=__gather_alpha_cutoff(blender_material, export_settings),
+        alpha_mode=__gather_alpha_mode(blender_material, export_settings),
+        double_sided=__gather_double_sided(blender_material, export_settings),
+        emissive_factor=__gather_emmissive_factor(blender_material, export_settings),
+        emissive_texture=__gather_emissive_texture(blender_material, export_settings),
+        extensions=__gather_extensions(blender_material, export_settings),
+        extras=__gather_extras(blender_material, export_settings),
+        name=__gather_name(blender_material, export_settings),
+        normal_texture=__gather_normal_texture(blender_material, export_settings),
+        occlusion_texture=__gather_occlusion_texture(blender_material, export_settings),
+        pbr_metallic_roughness=__gather_pbr_metallic_roughness(blender_material, export_settings)
     )
 
     return material
@@ -59,14 +64,11 @@ def gather_material(blender_material, export_settings):
     #             'material'] + ' not found. Please assign glTF 2.0 material or enable Blinn-Phong material in export.')
 
 
-
 def __filter_material(blender_material, export_settings):
     # if not blender_material.use_nodes:
     #     return False
     # if not blender_material.node_tree:
     #     return False
-
-
     return True
 
 
@@ -82,27 +84,14 @@ def __gather_double_sided(blender_material, export_settings):
     return None
 
 
-def __gather_emissive_factor(blender_material, export_settings):
+def __gather_emmissive_factor(blender_material, export_settings):
+    # TODO
     return None
 
 
 def __gather_emissive_texture(blender_material, export_settings):
-    if blender_material.node_tree and blender_material.use_nodes:
-        emissive_link = [link for link in blender_material.node_tree.links if link.to_socket.name == "Emissive"]
-        if not emissive_link:
-            return None
-        emissive_socket = emissive_link[0].to_socket
-        # search the node tree for textures, beginning from the 'emissive' socket in the material
-        emissive_tex_nodes = gltf2_blender_search_node_tree.gather_from_socket(
-            emissive_socket,
-            gltf2_blender_search_node_tree.FilterByType(bpy.types.ShaderNodeTexImage))
-
-    # TODO: gather texture from tex node
-
-
-    else:
-        pass
-    return None
+    emissive = gltf2_blender_get.get_socket_or_texture_slot(blender_material, "Emissive")
+    return gltf2_blender_gather_texture_info.gather_texture_info((emissive,), export_settings)
 
 
 def __gather_extensions(blender_material, export_settings):
@@ -115,17 +104,25 @@ def __gather_extras(blender_material, export_setttings):
 
 
 def __gather_name(blender_material, export_settings):
+
     return None
 
 
 def __gather_normal_texture(blender_material, export_settings):
-    return None
+    normal = gltf2_blender_get.get_socket_or_texture_slot(blender_material, "Normal")
+    return gltf2_blender_gather_material_normal_texture_info_class.gather_material_normal_texture_info_class(
+        (normal,),
+        export_settings)
 
 
 def __gather_occlusion_texture(blender_material, export_settings):
-    return None
+    emissive = gltf2_blender_get.get_socket_or_texture_slot(blender_material, "Occlusion")
+    return gltf2_blender_gather_material_occlusion_texture_info_class.gather_material_occlusion_texture_info_class(
+        (emissive,),
+        export_settings)
 
 
 def __gather_pbr_metallic_roughness(blender_material, export_settings):
-    # TODO
-    return None
+    return gltf2_blender_gather_materials_pbr_metallic_roughness.gather_material_pbr_metallic_roughness(
+        blender_material,
+        export_settings)
