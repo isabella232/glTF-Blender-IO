@@ -40,7 +40,7 @@ class BlenderSkin():
 
         armature = bpy.data.armatures.new(name)
         obj = bpy.data.objects.new(name, armature)
-        bpy.data.scenes[gltf.blender_scene].objects.link(obj)
+        bpy.data.scenes[gltf.blender_scene].collection.objects.link(obj)
         pyskin.blender_armature_name = obj.name
         if parent is not None:
             obj.parent = bpy.data.objects[gltf.data.nodes[parent].blender_object]

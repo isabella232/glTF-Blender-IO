@@ -81,7 +81,7 @@ class BlenderScene():
 
 
         # Parent root node to rotation object
-        bpy.data.scenes[gltf.blender_scene].objects.link(obj_rotation)
+        bpy.data.scenes[gltf.blender_scene].collection.objects.link(obj_rotation)
         for node_idx in pyscene.nodes:
             bpy.data.objects[gltf.data.nodes[node_idx].blender_object].parent = obj_rotation
 
