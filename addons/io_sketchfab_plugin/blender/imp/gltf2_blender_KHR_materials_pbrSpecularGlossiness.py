@@ -29,7 +29,7 @@ class BlenderKHR_materials_pbrSpecularGlossiness():
     @staticmethod
     def create(gltf, pbrSG, mat_name, vertex_color):
         engine = bpy.context.scene.render.engine
-        if engine == 'CYCLES':
+        if engine == 'BLENDER_EEVEE':
             BlenderKHR_materials_pbrSpecularGlossiness.create_cycles(gltf, pbrSG, mat_name, vertex_color)
         else:
             pass #TODO for internal / Eevee in future 2.8
