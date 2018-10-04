@@ -56,7 +56,7 @@ class BlenderNode():
 
             obj = bpy.data.objects.new(name, mesh)
             obj.rotation_mode = 'QUATERNION'
-            bpy.data.scenes[gltf.blender_scene].objects.link(obj)
+            bpy.data.scenes[gltf.blender_scene].collection.objects.link(obj)
 
             # Transforms apply only if this mesh is not skinned
             # See implementation node of gltf2 specification
@@ -113,7 +113,7 @@ class BlenderNode():
             gltf.log.info("Blender create Empty node")
             obj = bpy.data.objects.new("Node", None)
         obj.rotation_mode = 'QUATERNION'
-        bpy.data.scenes[gltf.blender_scene].objects.link(obj)
+        bpy.data.scenes[gltf.blender_scene].collection.objects.link(obj)
         BlenderNode.set_transforms(gltf, node_idx, pynode, obj, parent)
         pynode.blender_object = obj.name
         BlenderNode.set_parent(gltf, pynode, obj, parent)
