@@ -88,16 +88,16 @@ class BlenderSkin():
 
             # Get armature space location (bindpose + pose)
             # Then, remove original bind location from armspace location, and bind rotation
-            final_location = (bind_location.inverted() * parent_mat * Matrix.Translation(location)).to_translation()
-            obj.pose.bones[pynode.blender_bone_name].location = bind_rotation.inverted().to_matrix().to_4x4() * final_location
+            final_location = (bind_location.inverted() @ parent_mat @ Matrix.Translation(location)).to_translation()
+            obj.pose.bones[pynode.blender_bone_name].location = bind_rotation.inverted().to_matrix().to_4x4() @ final_location
 
             # Do the same for rotation
-            obj.pose.bones[pynode.blender_bone_name].rotation_quaternion = (bind_rotation.to_matrix().to_4x4().inverted() * parent_mat * rotation.to_matrix().to_4x4()).to_quaternion()
-            obj.pose.bones[pynode.blender_bone_name].scale = (bind_scale.inverted() * parent_mat * Conversion.scale_to_matrix(scale)).to_scale()
+            obj.pose.bones[pynode.blender_bone_name].rotation_quaternion = (bind_rotation.to_matrix().to_4x4().inverted() @ parent_mat @ rotation.to_matrix().to_4x4()).to_quaternion()
+            obj.pose.bones[pynode.blender_bone_name].scale = (bind_scale.inverted() @ parent_mat @ Conversion.scale_to_matrix(scale)).to_scale()
         else:
-            obj.pose.bones[pynode.blender_bone_name].location = bind_location.inverted() * location
-            obj.pose.bones[pynode.blender_bone_name].rotation_quaternion = bind_rotation.inverted() * rotation
-            obj.pose.bones[pynode.blender_bone_name].scale = bind_scale.inverted() * scale
+            obj.pose.bones[pynode.blender_bone_name].location = bind_location.inverted() @ location
+            obj.pose.bones[pynode.blender_bone_name].rotation_quaternion = bind_rotation.inverted() @ rotation
+            obj.pose.bones[pynode.blender_bone_name].scale = bind_scale.inverted() @ scale
 
     @staticmethod
     def create_bone(gltf, skin_id, node_id, parent):
