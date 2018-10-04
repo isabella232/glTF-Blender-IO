@@ -74,7 +74,7 @@ bl_info = {
     'license': 'GPL',
     'deps': '',
     'version': (1, 0, 2),
-    'blender': (2, 7, 9),
+    'blender': (2, 80, 0),
     'location': 'View3D > Tools > Sketchfab',
     'warning': '',
     'wiki_url': 'https://github.com/sketchfab/glTF-Blender-IO/releases',

@@ -50,6 +50,7 @@ class BlenderEmissiveMap():
         # add nodes
         emit = node_tree.nodes.new('ShaderNodeEmission')
         emit.location = 0,1000
+        emit.inputs['Strength'].default_value = 1.0;
         if pymaterial.emissive_factor != [1.0,1.0,1.0]:
             separate = node_tree.nodes.new('ShaderNodeSeparateRGB')
             separate.location = -750, 1000
