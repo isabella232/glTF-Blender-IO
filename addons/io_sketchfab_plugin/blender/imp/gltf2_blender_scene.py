@@ -47,7 +47,7 @@ class BlenderScene():
                 scene = bpy.data.scenes.new(pyscene.name)
             else:
                 scene = bpy.context.scene
-            scene.render.engine = "CYCLES"
+            scene.render.engine = 'BLENDER_EEVEE'
 
             gltf.blender_scene = scene.name
         else:

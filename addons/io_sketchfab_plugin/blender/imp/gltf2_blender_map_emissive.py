@@ -29,7 +29,7 @@ class BlenderEmissiveMap():
     @staticmethod
     def create(gltf, material_idx):
         engine = bpy.context.scene.render.engine
-        if engine == 'CYCLES':
+        if engine == 'BLENDER_EEVEE':
             BlenderEmissiveMap.create_cycles(gltf, material_idx)
         else:
             pass #TODO for internal / Eevee in future 2.8
