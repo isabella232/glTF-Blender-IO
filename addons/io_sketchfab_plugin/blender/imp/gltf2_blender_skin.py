@@ -132,7 +132,7 @@ class BlenderSkin():
         for node_id in pyskin.node_ids:
             obj = bpy.data.objects[gltf.data.nodes[node_id].blender_object]
             for bone in pyskin.joints:
-                obj.vertex_groups.new(gltf.data.nodes[bone].blender_bone_name)
+                obj.vertex_groups.new(name=gltf.data.nodes[bone].blender_bone_name)
 
     @staticmethod
     def assign_vertex_groups(gltf, skin_id):
