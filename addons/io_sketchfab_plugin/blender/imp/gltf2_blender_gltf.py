@@ -35,7 +35,7 @@ class BlenderGlTF():
 
         # Keep selection and active object
         selected_objects = bpy.context.selected_objects
-        active_object = bpy.context.scene.objects.active
+        active_object = bpy.context.view_layer.objects.active
 
         # Armature correction
         # Try to detect bone chains, and set bone lengths
@@ -49,7 +49,7 @@ class BlenderGlTF():
 
         threshold = 0.001
         for armobj in [obj for obj in bpy.data.objects if obj.type == "ARMATURE"]:
-            bpy.context.scene.objects.active = armobj
+            bpy.context.view_layer.objects.active = armobj
             armature = armobj.data
             bpy.ops.object.mode_set(mode="EDIT")
             for bone in armature.edit_bones:
@@ -85,7 +85,7 @@ class BlenderGlTF():
         for obj in selected_objects:
             obj.select_set('SELECT')
 
-        bpy.context.scene.objects.active = active_object
+        bpy.context.view_layer.objects.active = active_object
 
     @staticmethod
     def pre_compute(gltf):

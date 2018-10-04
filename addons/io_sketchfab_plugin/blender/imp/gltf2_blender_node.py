@@ -134,14 +134,14 @@ class BlenderNode():
                 if node.is_joint == True:
                     bpy.ops.object.select_all(action='DESELECT')
                     bpy.data.objects[node.blender_armature_name].select_set('SELECT')
-                    bpy.context.scene.objects.active = bpy.data.objects[node.blender_armature_name]
+                    bpy.context.view_layer.objects.active = bpy.data.objects[node.blender_armature_name]
                     bpy.ops.object.mode_set(mode='EDIT')
                     bpy.data.objects[node.blender_armature_name].data.edit_bones.active = bpy.data.objects[node.blender_armature_name].data.edit_bones[node.blender_bone_name]
                     bpy.ops.object.mode_set(mode='OBJECT')
                     bpy.ops.object.select_all(action='DESELECT')
                     obj.select_set('SELECT')
                     bpy.data.objects[node.blender_armature_name].select_set('SELECT')
-                    bpy.context.scene.objects.active = bpy.data.objects[node.blender_armature_name]
+                    bpy.context.view_layer.objects.active = bpy.data.objects[node.blender_armature_name]
                     bpy.context.scene.update()
                     bpy.ops.object.parent_set(type='BONE_RELATIVE', keep_transform=True)
                     # From world transform to local (-armature transform -bone transform)
