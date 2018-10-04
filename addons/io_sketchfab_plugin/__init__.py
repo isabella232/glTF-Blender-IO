@@ -528,20 +528,20 @@ def draw_search(layout, context):
 def draw_model_info(layout, model, context):
     ui_model_props = layout.box().column(align=True)
     ui_model_props.operator("wm.sketchfab_view", text="View on Sketchfab", icon='WORLD').model_uid = model.uid
-    ui_model_props.label('{}'.format(model.title), icon='OBJECT_DATA')
-    ui_model_props.label('{}'.format(model.author), icon='ARMATURE_DATA')
+    ui_model_props.label(text='{}'.format(model.title), icon='OBJECT_DATA')
+    ui_model_props.label(text='{}'.format(model.author), icon='ARMATURE_DATA')
 
     if model.license:
-        ui_model_props.label('{}'.format(model.license), icon='TEXT')
+        ui_model_props.label(text='{}'.format(model.license), icon='TEXT')
     else:
-        ui_model_props.label('Fetching..')
+        ui_model_props.label(text='Fetching..')
 
     if model.vertex_count and model.face_count:
         ui_model_stats = ui_model_props.row()
-        ui_model_stats.label('Verts: {}  |  Faces: {}'.format(Utils.humanify_number(model.vertex_count), Utils.humanify_number(model.face_count)), icon='MESH_DATA')
+        ui_model_stats.label(text='Verts: {}  |  Faces: {}'.format(Utils.humanify_number(model.vertex_count), Utils.humanify_number(model.face_count)), icon='MESH_DATA')
 
     if(model.animated):
-        ui_model_props.label('Animated: ' + model.animated, icon='ANIM_DATA')
+        ui_model_props.label(text='Animated: ' + model.animated, icon='ANIM_DATA')
 
     import_ops = ui_model_props.column()
     skfb = get_sketchfab_props()
@@ -557,7 +557,7 @@ def draw_model_info(layout, model, context):
         downloadlabel = skfb.import_status
 
     download_icon = 'EXPORT' if import_ops.enabled else 'INFO'
-    import_ops.label('')
+    import_ops.label(text='')
     import_ops.operator("wm.sketchfab_download", icon=download_icon, text=downloadlabel, translate=False, emboss=True).model_uid = model.uid
 
 
@@ -848,12 +848,12 @@ class LoginPanel(View3DPanel, bpy.types.Panel):
             layout.enabled = get_plugin_enabled()
             if skfb_login.skfb_api.is_user_logged():
                 login_row = layout.row()
-                login_row.label('Logged in as {}'.format(skfb_login.skfb_api.get_user_info()))
+                login_row.label(text='Logged in as {}'.format(skfb_login.skfb_api.get_user_info()))
                 login_row.operator('wm.sketchfab_login', text='Logout', icon='GO_LEFT').authenticate = False
                 if skfb_login.status:
                     layout.prop(skfb_login, 'status', icon=skfb_login.status_type)
             else:
-                layout.label("Login to your Sketchfab account", icon='INFO')
+                layout.label(text="Login to your Sketchfab account", icon='INFO')
                 layout.prop(skfb_login, "email")
                 layout.prop(skfb_login, "password")
                 ops_row = layout.row()
@@ -876,7 +876,7 @@ class LoginPanel(View3DPanel, bpy.types.Panel):
         doc_ui = self.layout.row()
         doc_ui.operator('wm.skfb_help', text='Documentation', icon='QUESTION')
         doc_ui.operator('wm.skfb_report_issue', text='Report an issue', icon='ERROR')
-        self.layout.label(Config.SKETCHFAB_TEMP_DIR, icon="SCRIPT")
+        self.layout.label(text=Config.SKETCHFAB_TEMP_DIR, icon="SCRIPT")
 
         layout = self.layout
 
@@ -899,11 +899,11 @@ class FiltersPanel(View3DPanel, bpy.types.Panel):
         col.separator()
         col.prop(props, "categories")
 
-        col.label('Sort by')
+        col.label(text='Sort by')
         sb = col.row()
         sb.prop(props, "sort_by", expand=True)
 
-        col.label('Face count')
+        col.label(text='Face count')
         col.prop(props, "face_count", expand=True)
 
 
@@ -930,7 +930,7 @@ def draw_results_icons(results, props, nbcol=4):
                     col2.operator("wm.sketchfab_modelview", text="{}".format(model.title + ' by ' + model.author)).uid = list(current.keys())[index]
     else:
         results.row()
-        results.row().label('No results')
+        results.row().label(text='No results')
         results.row()
 
 
@@ -958,7 +958,7 @@ class ResultsPanel(View3DPanel, bpy.types.Panel):
 
         result_label = 'Click below to see more results'
 
-        col.label(result_label, icon='INFO')
+        col.label(text=result_label, icon='INFO')
         try:
             col.template_icon_view(bpy.context.window_manager, 'result_previews', show_labels=True, scale=5.0)
         except Exception:
