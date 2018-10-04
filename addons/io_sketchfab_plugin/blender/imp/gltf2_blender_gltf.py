@@ -80,10 +80,10 @@ class BlenderGlTF():
 
         # Restore selection and active object
         for obj in bpy.context.selected_objects:
-            obj.select = False
+            obj.select_set('DESELECT')
 
         for obj in selected_objects:
-            obj.select = True
+            obj.select_set('SELECT')
 
         bpy.context.scene.objects.active = active_object
 

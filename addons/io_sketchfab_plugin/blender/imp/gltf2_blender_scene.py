@@ -54,7 +54,7 @@ class BlenderScene():
             gltf.blender_scene = pyscene.name
 
         for selected in bpy.context.selected_objects:
-            selected.select = False
+            selected.select_set('DESELECT')
 
         for node_idx in pyscene.nodes:
             BlenderNode.create(gltf, node_idx, None) # None => No parent
@@ -91,10 +91,10 @@ class BlenderScene():
         # Make object selected to allow to transform it directly after import
         try:
             for selected in bpy.context.selected_objects:
-                selected.select = False
+                selected.select_set('DESELECT')
 
             bpy.context.scene.objects.active = obj_rotation
-            obj_rotation.select = True
+            obj_rotation.select_set('SELECT')
         except Exception as e:
             print(e)
             pass
