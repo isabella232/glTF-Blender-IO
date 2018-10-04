@@ -93,7 +93,7 @@ class BlenderScene():
             for selected in bpy.context.selected_objects:
                 selected.select_set('DESELECT')
 
-            bpy.context.scene.objects.active = obj_rotation
+            bpy.context.view_layer.objects.active = obj_rotation
             obj_rotation.select_set('SELECT')
         except Exception as e:
             print(e)

@@ -108,8 +108,8 @@ class BlenderSkin():
         scene = bpy.data.scenes[gltf.blender_scene]
         obj   = bpy.data.objects[pyskin.blender_armature_name]
 
-        bpy.context.screen.scene = scene
-        scene.objects.active = obj
+        #bpy.context.screen.scene = scene
+        bpy.context.view_layer.objects.active = obj
         bpy.ops.object.mode_set(mode="EDIT")
 
         if pynode.name:
@@ -192,7 +192,7 @@ class BlenderSkin():
             for obj_sel in bpy.context.scene.objects:
                 obj_sel.select_set('DESELECT')
             obj.select_set('SELECT')
-            bpy.context.scene.objects.active = obj
+            bpy.context.view_layer.objects.active = obj
 
             #bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
             #obj.parent = bpy.data.objects[pyskin.blender_armature_name]
