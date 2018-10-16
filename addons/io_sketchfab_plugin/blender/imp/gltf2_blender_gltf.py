@@ -77,10 +77,8 @@ class BlenderGlTF():
 
         bpy.ops.object.mode_set(mode="OBJECT")
 
-
         # Restore selection and active object
-        for obj in bpy.context.selected_objects:
-            obj.select_set('DESELECT')
+        bpy.ops.object.select_all(action='DESELECT')
 
         for obj in selected_objects:
             obj.select_set('SELECT')
