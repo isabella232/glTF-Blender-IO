@@ -145,8 +145,8 @@ class BlenderNode():
                     bpy.context.scene.update()
                     bpy.ops.object.parent_set(type='BONE_RELATIVE', keep_transform=True)
                     # From world transform to local (-armature transform -bone transform)
-                    bone_trans = bpy.data.objects[node.blender_armature_name].pose.bones[node.blender_bone_name].matrix.to_translation().copy()
-                    bone_rot = bpy.data.objects[node.blender_armature_name].pose.bones[node.blender_bone_name].matrix.to_quaternion().copy()
+                    bone_trans = node.blender_bone_matrix.to_translation().copy()
+                    bone_rot = node.blender_bone_matrix.to_quaternion().copy()
                     bone_scale_mat = Conversion.scale_to_matrix(node.blender_bone_matrix.to_scale())
                     obj.location = bone_scale_mat @ obj.location
                     obj.location = bone_rot @ obj.location
