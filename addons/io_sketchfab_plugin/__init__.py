@@ -822,7 +822,6 @@ class View3DPanel:
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_label = "Sketchfab Assets Browser"
-    bl_category = "Sketchfab"
     bl_context = 'objectmode'
 
     @classmethod
