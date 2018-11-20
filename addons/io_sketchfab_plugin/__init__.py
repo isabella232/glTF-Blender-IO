@@ -848,7 +848,7 @@ class LoginPanel(View3DPanel, bpy.types.Panel):
             if skfb_login.skfb_api.is_user_logged():
                 login_row = layout.row()
                 login_row.label(text='Logged in as {}'.format(skfb_login.skfb_api.get_user_info()))
-                login_row.operator('wm.sketchfab_login', text='Logout', icon='GO_LEFT').authenticate = False
+                login_row.operator('wm.sketchfab_login', text='Logout', icon='DISCLOSURE_TRI_RIGHT').authenticate = False
                 if skfb_login.status:
                     layout.prop(skfb_login, 'status', icon=skfb_login.status_type)
             else:
