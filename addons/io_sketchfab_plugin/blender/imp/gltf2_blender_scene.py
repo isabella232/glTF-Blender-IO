@@ -93,4 +93,4 @@ class BlenderScene():
 
         # Restore selection: only keep root object selected
         bpy.ops.object.select_all(action='DESELECT')
-        obj_rotation.select_set('SELECT')
+        obj_rotation.select_set(True)

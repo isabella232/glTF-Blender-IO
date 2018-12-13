@@ -81,7 +81,7 @@ class BlenderGlTF():
         bpy.ops.object.select_all(action='DESELECT')
 
         for obj in selected_objects:
-            obj.select_set('SELECT')
+            obj.select_set(True)
 
         bpy.context.view_layer.objects.active = active_object
 
