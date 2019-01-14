@@ -29,8 +29,8 @@ class Config:
 
     # sometimes the path in preferences is empty
     def get_temp_path():
-        if bpy.context.user_preferences.filepaths.temporary_directory:
-            return bpy.context.user_preferences.filepaths.temporary_directory
+        if bpy.context.preferences.filepaths.temporary_directory:
+            return bpy.context.preferences.filepaths.temporary_directory
         else:
             return tempfile.mkdtemp()
 
