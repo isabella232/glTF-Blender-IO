@@ -258,7 +258,8 @@ class BlenderPbr():
         elif pypbr.metallic_type == gltf.TEXTURE:
             BlenderTextureInfo.create(gltf, pypbr.metallic_roughness_texture.index)
             metallic_text = BlenderTextureNode.create(gltf, pypbr.metallic_roughness_texture.index, node_tree, 'METALLIC ROUGHNESS')
-            metallic_text.color_space = 'NONE'
+            if metallic_text.image:
+                metallic_text.image.colorspace_settings.is_data = True
             metallic_text.location = -500,0
 
             metallic_separate = node_tree.nodes.new('ShaderNodeSeparateRGB')
@@ -286,7 +287,8 @@ class BlenderPbr():
 
             BlenderTextureInfo.create(gltf, pypbr.metallic_roughness_texture.index)
             metallic_text = BlenderTextureNode.create(gltf, pypbr.metallic_roughness_texture.index, node_tree, 'METALLIC ROUGHNESS')
-            metallic_text.color_space = 'NONE'
+            if metallic_text.image:
+                metallic_text.image.colorspace_settings.is_data = True
             metallic_text.location = -1000,0
 
             metallic_separate = node_tree.nodes.new('ShaderNodeSeparateRGB')

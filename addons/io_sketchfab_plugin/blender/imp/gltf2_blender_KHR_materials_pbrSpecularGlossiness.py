@@ -261,7 +261,8 @@ class BlenderKHR_materials_pbrSpecularGlossiness():
             BlenderTextureInfo.create(gltf, pbrSG['specularGlossinessTexture']['index'])
             spec_text = node_tree.nodes.new('ShaderNodeTexImage')
             spec_text.image = bpy.data.images[gltf.data.images[gltf.data.textures[pbrSG['specularGlossinessTexture']['index']].source].blender_image_name]
-            spec_text.color_space = 'NONE'
+            if spec_text.image:
+                spec_text.image.colorspace_settings.is_data = True
             spec_text.location = -500,0
 
             spec_mapping = node_tree.nodes.new('ShaderNodeMapping')
@@ -287,7 +288,8 @@ class BlenderKHR_materials_pbrSpecularGlossiness():
 
             spec_text = node_tree.nodes.new('ShaderNodeTexImage')
             spec_text.image = bpy.data.images[gltf.data.images[gltf.data.textures[pbrSG['specularGlossinessTexture']['index']].source].blender_image_name]
-            spec_text.color_space = 'NONE'
+            if spec_text.image:
+                spec_text.image.colorspace_settings.is_data = True
             spec_text.location = -1000,0
 
             spec_math     = node_tree.nodes.new('ShaderNodeMath')

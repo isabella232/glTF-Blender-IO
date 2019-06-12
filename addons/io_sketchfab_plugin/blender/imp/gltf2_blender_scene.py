@@ -89,7 +89,7 @@ class BlenderScene():
             bpy.data.objects[gltf.data.nodes[node_idx].blender_object].parent = obj_rotation
 
         # Place imported model on cursor
-        obj_rotation.location = bpy.context.scene.cursor_location
+        obj_rotation.location = bpy.context.scene.cursor.location
 
         # Restore selection: only keep root object selected
         bpy.ops.object.select_all(action='DESELECT')
