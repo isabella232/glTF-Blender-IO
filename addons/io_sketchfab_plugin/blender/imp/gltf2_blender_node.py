@@ -142,7 +142,7 @@ class BlenderNode():
                     obj.select_set(True)
                     bpy.data.objects[node.blender_armature_name].select_set(True)
                     bpy.context.view_layer.objects.active = bpy.data.objects[node.blender_armature_name]
-                    bpy.context.scene.update()
+                    bpy.context.object.update_tag(refresh={'OBJECT', 'DATA', 'TIME'})
                     bpy.ops.object.parent_set(type='BONE_RELATIVE', keep_transform=True)
                     # From world transform to local (-armature transform -bone transform)
                     bone_trans = node.blender_bone_matrix.to_translation().copy()
